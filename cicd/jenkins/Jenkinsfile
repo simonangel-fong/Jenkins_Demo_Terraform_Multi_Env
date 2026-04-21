@@ -52,9 +52,9 @@ pipeline {
   }
 
   post {
-    always {
-      archiveArtifacts artifacts: 'tfplan.binary, tfplan.txt', fingerprint: true
-    }
+    // always {
+    //   archiveArtifacts artifacts: 'tfplan.binary, tfplan.txt', fingerprint: true
+    // }
     failure {
       echo 'Feature branch validation failed.'
     }
