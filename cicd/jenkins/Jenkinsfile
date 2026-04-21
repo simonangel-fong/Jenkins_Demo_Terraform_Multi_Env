@@ -1,0 +1,62 @@
+pipeline {
+  agent {
+    label 'agent-terraform'
+  }
+
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+
+  triggers {
+    // optional if using webhook instead
+    pollSCM('H/5 * * * *')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Format') {
+      steps {
+        sh 'terraform fmt -recursive -check'
+      }
+    }
+
+    stage('Init') {
+      steps {
+        sh 'terraform init'
+      }
+    }
+
+    stage('Validate') {
+      steps {
+        sh 'terraform validate'
+      }
+    }
+
+    stage('Plan') {
+      steps {
+        sh '''
+          terraform plan \
+            -var-file=envs/dev/terraform.tfvars \
+            -out=tfplan.binary
+
+          terraform show -no-color tfplan.binary > tfplan.txt
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'tfplan.binary, tfplan.txt', fingerprint: true
+    }
+    failure {
+      echo 'Feature branch validation failed.'
+    }
+  }
+}

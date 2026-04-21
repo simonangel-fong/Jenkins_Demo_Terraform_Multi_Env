@@ -38,7 +38,7 @@ project/
 │   ├── variables.tf
 │   └── providers.tf
 ├── cicd/
-│   └── cd/
+│   └── Jenkins/
 │       ├── Jenkinsfile
 │       └── values.yaml
 ├── .gitignore
@@ -75,10 +75,10 @@ project/
 
 **Done when:**
 
-- [ ] `terraform validate` passes
-- [ ] `terraform plan` runs cleanly for dev environment
-- [ ] No hardcoded environment values in module or root config
-- [ ] Remote state initialises successfully
+- [x] `terraform validate` passes
+- [x] `terraform plan` runs cleanly for dev environment
+- [x] No hardcoded environment values in module or root config
+- [x] Remote state initialises successfully
 
 ---
 
@@ -88,58 +88,71 @@ project/
 
 **Steps:**
 
-1. Add Jenkins Helm chart config to `cicd/cd/values.yaml`:
+1. Add Jenkins Helm chart config to `cicd/jenkins/values.yaml`:
    - Enable Kubernetes plugin for agent pods
    - Mount AWS credentials as a Kubernetes secret → Jenkins credential store
    - Install plugins: `git`, `pipeline`, `kubernetes`, `aws-credentials`, `terraform`
 2. Deploy Jenkins:
    ```bash
    helm repo add jenkins https://charts.jenkins.io
-   helm upgrade --install jenkins jenkins/jenkins -f cicd/cd/values.yaml -n jenkins
+   helm upgrade --install jenkins jenkins/jenkins -f cicd/jenkins/values.yaml -n jenkins
    ```
 3. Configure Jenkins credentials:
    - AWS Access Key / Secret (type: AWS Credentials) — ID: `aws-creds`
    - GitHub token for SCM polling — ID: `github-token`
 4. Install Terraform binary on Jenkins agent image (or use `hashicorp/terraform` container as agent)
-5. Create two pipeline jobs pointing to `cicd/cd/Jenkinsfile`:
+5. Create two pipeline jobs pointing to `cicd/jenkins/Jenkinsfile`:
    - `feature-vpc-pr` — triggered on PR branches matching `feature/*`
    - `master-pipeline` — triggered on merge to `master`
 
 **Done when:**
 
-- [ ] Jenkins accessible and agents run in K8s pods
-- [ ] AWS and GitHub credentials stored securely
-- [ ] Both pipeline jobs created and can connect to repo
+- [x] Jenkins accessible and agents run in K8s pods
+- [x] AWS and GitHub credentials stored securely
+- [x] Both pipeline jobs created and can connect to repo
 
 ---
 
 ## Step 3 — Pipeline: `feature/vpc-pr`
 
-**Goal:** Automated validation on every push to a feature branch; produces a plan for PR review.
+**Goal:** Automatically validate Terraform changes on every push to a feature branch and generate a plan for PR review.
 
-**Trigger:** Push to `feature/*` branch (SCM polling or webhook)
+**Trigger:** Push to `feature/*` branch  
+(via GitHub webhook or Jenkins SCM polling)
 
-**Jenkinsfile stages:**
+**Behavior:**
 
+- Run on feature branches only
+- Do not apply infrastructure changes
+- Use the `dev` variable file for planning
+- Fail fast on formatting or validation errors
+- Keep the plan output available for review
+
+**Pipeline stages:**
+
+```txt
+Checkout → fmt → init → validate → plan (dev) → archive
 ```
-Checkout → fmt → validate → plan (dev)
-```
 
-| Stage    | Command                                                                              |
-| -------- | ------------------------------------------------------------------------------------ |
-| Checkout | `git checkout`                                                                       |
-| Format   | `terraform fmt -recursive -check` — fail if unformatted                              |
-| Validate | `terraform validate`                                                                 |
-| Plan     | `terraform plan -var-file=envs/dev/terraform.tfvars -out=tfplan.binary`              |
-| Publish  | Archive `tfplan.binary` as build artifact; post plan output as PR comment (optional) |
+| Stage    | Command / Action                                                        |
+| -------- | ----------------------------------------------------------------------- |
+| Checkout | Checkout source from feature branch                                     |
+| Format   | `terraform fmt -recursive -check`                                       |
+| Init     | `terraform init`                                                        |
+| Validate | `terraform validate`                                                    |
+| Plan     | `terraform plan -var-file=envs/dev/terraform.tfvars -out=tfplan.binary` |
+| Archive  | Archive `tfplan.binary`; optionally save text plan output for review    |
 
-> No `apply` on feature branches. Plan output serves as the PR diff.
+> No terraform apply on feature branches.
+> The Terraform plan serves as the infrastructure change preview for PR review.
 
 **Done when:**
 
-- [ ] Pipeline triggers automatically on feature branch push
-- [ ] fmt failure blocks the pipeline
-- [ ] Plan output visible in Jenkins console / PR
+- [ ] Pipeline triggers automatically on push to feature/\*
+- [ ] terraform fmt -check failure stops the pipeline
+- [ ] terraform validate failure stops the pipeline
+- [ ] Terraform plan runs successfully against dev variables
+- [ ] Plan output is visible in Jenkins logs or archived as an artifact
 
 ---
 

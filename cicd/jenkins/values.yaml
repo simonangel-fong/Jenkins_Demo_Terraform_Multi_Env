@@ -1,0 +1,170 @@
+controller:
+  admin:
+    existingSecret: jenkins-admin
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password
+
+  containerEnv:
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: aws-access-key-id
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: aws-secret-access-key
+    - name: GITHUB_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: github-token
+
+  serviceType: ClusterIP
+
+  numExecutors: 0
+  initializeOnce: true
+
+  installPlugins:
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - configuration-as-code
+    - pipeline-stage-view
+    - job-dsl
+    - aws-credentials
+    - credentials
+    - plain-credentials
+    - ssh-credentials
+    - junit
+    - timestamper
+
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: "Jenkins configured via Helm and JCasC for Terraform CI/CD"
+
+      credentials: |
+        credentials:
+          system:
+            domainCredentials:
+              - credentials:
+                  - aws:
+                      scope: GLOBAL
+                      id: "aws-creds"
+                      accessKey: "${AWS_ACCESS_KEY_ID}"
+                      secretKey: "${AWS_SECRET_ACCESS_KEY}"
+                      description: "AWS credentials for Terraform pipeline"
+
+                  - string:
+                      scope: GLOBAL
+                      id: "github-token"
+                      secret: "${GITHUB_TOKEN}"
+                      description: "GitHub token for Jenkins pipeline access"
+
+      jobs: |
+        jobs:
+          - script: |
+              pipelineJob('feature-vpc-pr') {
+                description('Terraform validation and plan for feature/* branches')
+
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url('https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git')
+                          credentials('github-token')
+                        }
+                        branches('*/feature/*')
+                      }
+                    }
+                    scriptPath('cicd/jenkins/Jenkinsfile')
+                  }
+                }
+              }
+
+          - script: |
+              pipelineJob('master-pipeline') {
+                description('Terraform pipeline for master branch')
+
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url('https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git')
+                          credentials('github-token')
+                        }
+                        branches('*/master')
+                      }
+                    }
+                    scriptPath('cicd/jenkins/Jenkinsfile')
+                  }
+                }
+              }
+
+  env:
+    - name: JENKINS_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: jenkins-admin-password
+
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: aws-access-key-id
+
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: aws-secret-access-key
+
+    - name: GITHUB_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: github-token
+
+persistence:
+  enabled: true
+  size: 8Gi
+
+agent:
+  enabled: true
+
+  maxRequestsPerHostStr: "32"
+  retentionTimeout: "5"
+  waitForPodSec: "120"
+
+  podTemplates:
+    terraform: |
+      - name: terraform
+        label: agent-terraform
+        serviceAccount: jenkins
+        containers:
+          - name: terraform
+            image: hashicorp/terraform:1.8.5
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            resourceRequestCpu: "250m"
+            resourceRequestMemory: "256Mi"
+            resourceLimitCpu: "1"
+            resourceLimitMemory: "1Gi"
+
+          - name: git
+            image: alpine/git:2.45.2
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            resourceRequestCpu: "100m"
+            resourceRequestMemory: "128Mi"
+            resourceLimitCpu: "500m"
+            resourceLimitMemory: "512Mi"
