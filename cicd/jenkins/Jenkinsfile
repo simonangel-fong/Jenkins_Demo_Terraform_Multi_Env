@@ -20,7 +20,7 @@ pipeline {
     TF_VAR_FILE      = 'env/dev/terraform.tfvars'
 
     AWS_REGION       = 'ca-central-1'
-    TF_STATE_BUCKET  = "${env.TF_STATE_BUCKET}"
+    TF_STATE_BUCKET  = "simonangelfong-terraform-backend"
     TF_STATE_KEY     = 'jenkins-terraform/sandbox/terraform.tfstate'
   }
 
@@ -67,6 +67,7 @@ pipeline {
     stage('init') {
       steps {
         dir("${env.TF_ROOT}") {
+          echo "${TF_STATE_BUCKET}"
           sh '''
             terraform init \
               -input=false \

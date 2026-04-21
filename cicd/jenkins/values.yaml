@@ -20,11 +20,6 @@ controller:
         secretKeyRef:
           name: jenkins-secrets
           key: github-token
-    - name: TF_STATE_BUCKET
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-env
-          key: tf-state-bucket
 
   serviceType: ClusterIP
 
