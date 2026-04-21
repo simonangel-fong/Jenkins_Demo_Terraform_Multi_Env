@@ -20,11 +20,11 @@ pipeline {
       }
     }
 
-    // stage('Format') {
-    //   steps {
-    //     sh 'fmt -recursive -check'
-    //   }
-    // }
+    stage('Format') {
+      steps {
+        sh 'fmt -recursive -check'
+      }
+    }
 
     // stage('Init') {
     //   steps {
