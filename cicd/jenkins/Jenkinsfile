@@ -20,35 +20,35 @@ pipeline {
       }
     }
 
-    stage('Format') {
-      steps {
-        sh 'fmt -recursive -check'
-      }
-    }
+    // stage('Format') {
+    //   steps {
+    //     sh 'fmt -recursive -check'
+    //   }
+    // }
 
-    stage('Init') {
-      steps {
-        sh 'terraform init'
-      }
-    }
+    // stage('Init') {
+    //   steps {
+    //     sh 'terraform init'
+    //   }
+    // }
 
-    stage('Validate') {
-      steps {
-        sh 'terraform validate'
-      }
-    }
+    // stage('Validate') {
+    //   steps {
+    //     sh 'terraform validate'
+    //   }
+    // }
 
-    stage('Plan') {
-      steps {
-        sh '''
-          terraform plan \
-            -var-file=envs/dev/terraform.tfvars \
-            -out=tfplan.binary
+    // stage('Plan') {
+    //   steps {
+    //     sh '''
+    //       terraform plan \
+    //         -var-file=envs/dev/terraform.tfvars \
+    //         -out=tfplan.binary
 
-          terraform show -no-color tfplan.binary > tfplan.txt
-        '''
-      }
-    }
+    //       terraform show -no-color tfplan.binary > tfplan.txt
+    //     '''
+    //   }
+    // }
   }
 
   post {

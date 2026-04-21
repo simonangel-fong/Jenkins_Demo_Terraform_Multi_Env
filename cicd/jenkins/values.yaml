@@ -77,7 +77,7 @@ controller:
                       git {
                         remote {
                           url('https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git')
-                          credentials('github-token')
+                          
                         }
                         branches('*/feature/*')
                       }
