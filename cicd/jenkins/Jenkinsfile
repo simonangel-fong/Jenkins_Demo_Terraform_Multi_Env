@@ -1,68 +1,117 @@
 pipeline {
   agent {
-    label 'agent-terraform'
+    kubernetes {
+      label 'agent-terraform'
+      defaultContainer 'terraform'
+    }
   }
 
   options {
     timestamps()
     disableConcurrentBuilds()
-  }
-
-  triggers {
-    // optional if using webhook instead
-    pollSCM('H/5 * * * *')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
   }
 
   environment {
-    TF_DIR = 'infra'    
+    TF_IN_AUTOMATION = 'true'
+    TF_ROOT          = 'infra'
+    TF_PLAN_FILE     = 'tfplan.binary'
+    TF_PLAN_TXT      = 'tfplan.txt'
+    TF_VAR_FILE      = 'envs/dev/terraform.tfvars'
+  }
+
+  triggers {
+    // optional if you use webhook instead
+    pollSCM('H/5 * * * *')
   }
 
   stages {
+    stage('Branch Guard') {
+      steps {
+        script {
+          def branchName = env.BRANCH_NAME ?: sh(
+            script: 'git rev-parse --abbrev-ref HEAD',
+            returnStdout: true
+          ).trim()
+
+          echo "Detected branch: ${branchName}"
+
+          if (!branchName.startsWith('feature/')) {
+            error("This pipeline only supports feature/* branches. Current branch: ${branchName}")
+          }
+        }
+      }
+    }
+
     stage('Checkout') {
       steps {
         checkout scm
       }
     }
 
-    stage('Format') {
+    stage('fmt') {
       steps {
-        dir("${TF_DIR}") {
-          sh 'fmt -recursive -check'
+        dir("${env.TF_ROOT}") {
+          sh '''
+            terraform fmt -recursive -check
+          '''
         }
       }
     }
 
-    // stage('Init') {
-    //   steps {
-    //     sh 'terraform init'
-    //   }
-    // }
+    stage('init') {
+      steps {
+        dir("${env.TF_ROOT}") {
+          sh '''
+            terraform init -input=false
+          '''
+        }
+      }
+    }
 
-    // stage('Validate') {
-    //   steps {
-    //     sh 'terraform validate'
-    //   }
-    // }
+    stage('validate') {
+      steps {
+        dir("${env.TF_ROOT}") {
+          sh '''
+            terraform validate
+          '''
+        }
+      }
+    }
 
-    // stage('Plan') {
-    //   steps {
-    //     sh '''
-    //       terraform plan \
-    //         -var-file=envs/dev/terraform.tfvars \
-    //         -out=tfplan.binary
+    stage('plan (dev)') {
+      steps {
+        dir("${env.TF_ROOT}") {
+          sh '''
+            terraform plan \
+              -input=false \
+              -var-file="${TF_VAR_FILE}" \
+              -out="${TF_PLAN_FILE}"
 
-    //       terraform show -no-color tfplan.binary > tfplan.txt
-    //     '''
-    //   }
-    // }
+            terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
+          '''
+        }
+      }
+    }
+
+    stage('archive') {
+      steps {
+        archiveArtifacts artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}", fingerprint: true
+      }
+    }
   }
 
   post {
-    // always {
-    //   archiveArtifacts artifacts: 'tfplan.binary, tfplan.txt', fingerprint: true
-    // }
+    always {
+      echo 'Pipeline finished.'
+    }
+
+    success {
+      echo 'Terraform validation and plan completed successfully.'
+    }
+
     failure {
-      echo 'Feature branch validation failed.'
+      echo 'Pipeline failed. Check fmt / validate / plan output.'
     }
   }
 }
