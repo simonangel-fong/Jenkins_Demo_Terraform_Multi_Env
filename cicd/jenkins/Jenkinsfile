@@ -59,46 +59,46 @@ pipeline {
       }
     }
 
-    stage('init') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          sh '''
-            terraform init -input=false
-          '''
-        }
-      }
-    }
+    // stage('init') {
+    //   steps {
+    //     dir("${env.TF_ROOT}") {
+    //       sh '''
+    //         terraform init -input=false
+    //       '''
+    //     }
+    //   }
+    // }
 
-    stage('validate') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          sh '''
-            terraform validate
-          '''
-        }
-      }
-    }
+    // stage('validate') {
+    //   steps {
+    //     dir("${env.TF_ROOT}") {
+    //       sh '''
+    //         terraform validate
+    //       '''
+    //     }
+    //   }
+    // }
 
-    stage('plan (dev)') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          sh '''
-            terraform plan \
-              -input=false \
-              -var-file="${TF_VAR_FILE}" \
-              -out="${TF_PLAN_FILE}"
+    // stage('plan (dev)') {
+    //   steps {
+    //     dir("${env.TF_ROOT}") {
+    //       sh '''
+    //         terraform plan \
+    //           -input=false \
+    //           -var-file="${TF_VAR_FILE}" \
+    //           -out="${TF_PLAN_FILE}"
 
-            terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
-          '''
-        }
-      }
-    }
+    //         terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
+    //       '''
+    //     }
+    //   }
+    // }
 
-    stage('archive') {
-      steps {
-        archiveArtifacts artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}", fingerprint: true
-      }
-    }
+    // stage('archive') {
+    //   steps {
+    //     archiveArtifacts artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}", fingerprint: true
+    //   }
+    // }
   }
 
   post {
