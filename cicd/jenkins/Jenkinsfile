@@ -22,7 +22,7 @@ pipeline {
 
     stage('Format') {
       steps {
-        sh 'terraform fmt -recursive -check'
+        sh 'fmt -recursive -check'
       }
     }
 

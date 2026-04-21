@@ -107,31 +107,6 @@ controller:
                 }
               }
 
-  env:
-    - name: JENKINS_ADMIN_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-secrets
-          key: jenkins-admin-password
-
-    - name: AWS_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-secrets
-          key: aws-access-key-id
-
-    - name: AWS_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-secrets
-          key: aws-secret-access-key
-
-    - name: GITHUB_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-secrets
-          key: github-token
-
 persistence:
   enabled: true
   size: 8Gi
@@ -150,7 +125,7 @@ agent:
         serviceAccount: jenkins
         containers:
           - name: terraform
-            image: hashicorp/terraform:1.8.5
+            image: hashicorp/terraform:1.14
             command: "/bin/sh -c"
             args: "cat"
             ttyEnabled: true
