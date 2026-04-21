@@ -3,7 +3,11 @@
 ```sh
 terraform -chdir=infra init --backend-config=env/sandbox/backend.hcl
 terraform -chdir=infra fmt -recursive && terraform -chdir=infra validate
+terraform -chdir=infra plan -var-file=envs/sandbox/terraform.tfvars
+
 terraform -chdir=infra apply -auto-approve -var-file="env/sandbox/terraform.tfvars"
+
+terraform -chdir=infra destroy -auto-approve -var-file="env/sandbox/terraform.tfvars"
 ```
 
 ---

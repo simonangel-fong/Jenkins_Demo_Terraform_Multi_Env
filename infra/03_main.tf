@@ -1,14 +1,7 @@
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+module "aws_pvc" {
+  source = "./modules/vpc"
 
-  name = "${var.project}-${var.env}"
-  cidr = var.vpc_cidr
-
-  azs             = [for x in var.az_cidr : x.az]
-  private_subnets = [for x in var.az_cidr : x.private_subnet]
-  public_subnets  = [for x in var.az_cidr : x.public_subnet]
-
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  vpc_name = "${var.project}-${var.env}"
+  vpc_cidr = var.vpc_cidr
+  az_cidr  = var.az_cidr
 }

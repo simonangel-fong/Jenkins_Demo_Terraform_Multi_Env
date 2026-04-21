@@ -62,7 +62,7 @@ project/
 4. Configure remote state per environment:
    - S3 bucket: `<project>-tfstate`
    - Key pattern: `<project>/<env>/terraform.tfstate`
-   - DynamoDB table for state locking
+   - Use S3 for state locking(terraform latest version)
    - `envs/dev/backend.hcl` referencing bucket/key/region
 5. Create `envs/dev/terraform.tfvars` with dev-specific values (no hardcoded values in module)
 6. Validate locally:

@@ -22,7 +22,7 @@ variable "aws_region" {
 }
 
 # ##############################
-# AWS
+# VPC
 # ##############################
 variable "vpc_cidr" {
   description = "VPC Cidr"
