@@ -28,4 +28,7 @@ kubectl create secret generic jenkins-admin \
 kubectl delete secret jenkins-secrets
 kubectl delete secret jenkins-admin
 
+kubectl create configmap jenkins-env    \
+  --from-literal=tf-state-bucket=''
+
 ```
