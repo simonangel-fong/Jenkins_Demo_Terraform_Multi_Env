@@ -14,7 +14,7 @@ pipeline {
   }
 
   environment {
-    TF_NAME = 'infra'    
+    TF_DIR = 'infra'    
   }
 
   stages {
