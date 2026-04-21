@@ -13,6 +13,10 @@ pipeline {
     pollSCM('H/5 * * * *')
   }
 
+  environment {
+    TF_NAME = 'infra'    
+  }
+
   stages {
     stage('Checkout') {
       steps {
@@ -22,7 +26,9 @@ pipeline {
 
     stage('Format') {
       steps {
-        sh 'fmt -recursive -check'
+        dir("${TF_DIR}") {
+          sh 'fmt -recursive -check'
+        }
       }
     }
 
