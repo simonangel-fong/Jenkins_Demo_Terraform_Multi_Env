@@ -155,3 +155,13 @@ agent:
             resourceRequestMemory: "128Mi"
             resourceLimitCpu: "500m"
             resourceLimitMemory: "512Mi"
+          
+          - name: aws
+            image: amazon/aws-cli:2.34.34
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            resourceRequestCpu: "100m"
+            resourceRequestMemory: "128Mi"
+            resourceLimitCpu: "500m"
+            resourceLimitMemory: "512Mi"
