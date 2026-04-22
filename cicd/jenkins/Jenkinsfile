@@ -103,7 +103,7 @@ pipeline {
       steps {
         dir("${env.TF_ROOT}") {
           sh '''
-            terraform plan \ 
+            terraform plan \
               -input=false \
               -var="env=${TF_VAR_ENV}"  \
               -out="${TF_PLAN_FILE}"
