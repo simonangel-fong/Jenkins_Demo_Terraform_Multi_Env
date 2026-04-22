@@ -19,7 +19,7 @@ pipeline {
     TF_STATE_KEY  = 'jenkins-terraform/dev/terraform.tfstate'
     TF_PLAN_FILE  = 'tfplan.binary'
     TF_PLAN_TXT   = 'tfplan.txt'
-    TF_VAR_FILE   = 'envs/dev/terraform.tfvars'
+    TF_VAR_ENV    = 'dev'
   }
 
   triggers {
@@ -120,7 +120,7 @@ pipeline {
             sh '''
               terraform plan \
                 -input=false \
-                -var-file="${TF_VAR_FILE}" \
+                -var="env=${TF_VAR_ENV}"  \
                 -out="${TF_PLAN_FILE}"
 
               terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
