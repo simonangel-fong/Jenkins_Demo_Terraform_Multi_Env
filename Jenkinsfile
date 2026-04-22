@@ -36,60 +36,60 @@ pipeline {
           }
         }
 
-      //   stage('Dev: Init') {
-      //     steps {
-      //       container('terraform') {
-      //         sh 'terraform -chdir=${TF_DIR} init'
-      //       }
-      //     }
-      //   }
+        // stage('Dev: Init') {
+        //   steps {
+        //     container('terraform') {
+        //       sh 'terraform -chdir=${TF_DIR} init'
+        //     }
+        //   }
+        // }
 
-      //   stage('Dev: Validate') {
-      //     steps {
-      //       container('terraform') {
-      //         sh 'terraform -chdir=${TF_DIR} validate'
-      //       }
-      //     }
-      //   }
+        // stage('Dev: Validate') {
+        //   steps {
+        //     container('terraform') {
+        //       sh 'terraform -chdir=${TF_DIR} validate'
+        //     }
+        //   }
+        }
 
-      //   stage('Dev: Trivy Scan') {
-      //     steps {
-      //       container('trivy') {
-      //         sh 'trivy config ${TF_DIR}'
-      //       }
-      //     }
-      //   }
+        // stage('Dev: Trivy Scan') {
+        //   steps {
+        //     container('trivy') {
+        //       sh 'trivy config ${TF_DIR}'
+        //     }
+        //   }
+        // }
 
-      //   stage('Dev: Plan') {
-      //     steps {
-      //       container('terraform') {
-      //         sh 'terraform -chdir=${TF_DIR} plan -out=tfplan'
-      //       }
-      //     }
-      //     post {
-      //       always {
-      //         archiveArtifacts artifacts: "${TF_DIR}/tfplan", allowEmptyArchive: true
-      //       }
-      //     }
-      //   }
+        // stage('Dev: Plan') {
+        //   steps {
+        //     container('terraform') {
+        //       sh 'terraform -chdir=${TF_DIR} plan -out=tfplan'
+        //     }
+        //   }
+        //   post {
+        //     always {
+        //       archiveArtifacts artifacts: "${TF_DIR}/tfplan", allowEmptyArchive: true
+        //     }
+        //   }
+        // }
 
-      //   stage('Dev: Apply') {
-      //     steps {
-      //       container('terraform') {
-      //         sh 'terraform -chdir=${TF_DIR} apply -auto-approve tfplan'
-      //       }
-      //     }
-      //   }
+        // stage('Dev: Apply') {
+        //   steps {
+        //     container('terraform') {
+        //       sh 'terraform -chdir=${TF_DIR} apply -auto-approve tfplan'
+        //     }
+        //   }
+        // }
 
-      //   stage('Dev: Verify') {
-      //     steps {
-      //       container('aws') {
-      //         sh 'aws ec2 describe-vpcs --region ${AWS_REGION}'
-      //       }
-      //     }
-      //   }
+        // stage('Dev: Verify') {
+        //   steps {
+        //     container('aws') {
+        //       sh 'aws ec2 describe-vpcs --region ${AWS_REGION}'
+        //     }
+        //   }
+        // }
 
-      // }
+      }
     }
 
     stage('Test') {
