@@ -25,6 +25,26 @@ controller:
         secretKeyRef:
           name: jenkins-secrets
           key: tf-state-bucket
+    - name: MAIL_SMTP_HOST
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-host
+    - name: MAIL_SMTP_PORT
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-port
+    - name: MAIL_SMTP_USER
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-user
+    - name: MAIL_SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-password
 
   serviceType: ClusterIP
 
@@ -52,30 +72,68 @@ controller:
       welcome-message: |
         jenkins:
           systemMessage: "Jenkins configured via Helm and JCasC for Terraform CI/CD"
-
+      
+      tools: |
+        tool:
+          git:
+            installations:
+            - home: "git"
+              name: "Default"
+      
       credentials: |
         credentials:
           system:
             domainCredentials:
               - credentials:
                   - aws:
-                      scope: GLOBAL
                       id: "aws-creds"
                       accessKey: "${AWS_ACCESS_KEY_ID}"
                       secretKey: "${AWS_SECRET_ACCESS_KEY}"
+                      scope: GLOBAL
                       description: "AWS credentials for Terraform pipeline"
 
                   - string:
-                      scope: GLOBAL
                       id: "github-token"
                       secret: "${GITHUB_TOKEN}"
+                      scope: GLOBAL
                       description: "GitHub token for Jenkins pipeline access"
 
                   - string:
-                      scope: GLOBAL
                       id: "tf-state-bucket"
                       secret: "${TF_STATE_BUCKET}"
+                      scope: GLOBAL
                       description: "Terraform remote state bucket"
+
+                  - usernamePassword:
+                      id: "gmail_cred"
+                      username: "${MAIL_SMTP_USER}"
+                      password: "${MAIL_SMTP_PASSWORD}"
+                      usernameSecret: true
+                      scope: GLOBAL
+                      description: "Gmail SMTP credentials for Jenkins notifications"
+
+      email: |
+        unclassified:
+          location:
+            adminAddress: "${MAIL_SMTP_USER}"
+          buildDiscarders:
+            configuredBuildDiscarders:
+            - "jobBuildDiscarder"
+          email-ext:
+            mailAccount:
+              credentialsId: "gmail_cred"
+              smtpHost: "${MAIL_SMTP_HOST}"
+              smtpPort: "${MAIL_SMTP_PORT}"
+              useSsl: true
+          mailer:
+            authentication:
+              username: "${MAIL_SMTP_USER}"
+              password: "${MAIL_SMTP_PASSWORD}"
+            charset: "UTF-8"
+            smtpHost: "${MAIL_SMTP_HOST}"
+            smtpPort: "${MAIL_SMTP_PORT}"
+            useSsl: true
+            useTls: false
 
       jobs: |
         jobs:
@@ -114,7 +172,7 @@ controller:
                         branches('*/master')
                       }
                     }
-                    scriptPath('cicd/jenkins/Jenkinsfile')
+                    scriptPath('Jenkinsfile')
                   }
                 }
               }
@@ -126,9 +184,9 @@ persistence:
 agent:
   enabled: true
 
-  maxRequestsPerHostStr: "32"
-  retentionTimeout: "5"
-  waitForPodSec: "120"
+  maxRequestsPerHostStr: 32
+  retentionTimeout: 5
+  waitForPodSec: 120
 
   podTemplates:
     terraform: |
@@ -148,6 +206,26 @@ agent:
 
           - name: git
             image: alpine/git:2.45.2
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            resourceRequestCpu: "100m"
+            resourceRequestMemory: "128Mi"
+            resourceLimitCpu: "500m"
+            resourceLimitMemory: "512Mi"
+
+          - name: aws
+            image: amazon/aws-cli:2.34.34
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            resourceRequestCpu: "100m"
+            resourceRequestMemory: "128Mi"
+            resourceLimitCpu: "500m"
+            resourceLimitMemory: "512Mi"
+
+          - name: trivy
+            image: aquasec/trivy:latest
             command: "/bin/sh -c"
             args: "cat"
             ttyEnabled: true

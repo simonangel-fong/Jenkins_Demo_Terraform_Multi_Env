@@ -1,6 +1,7 @@
 ## Development in Sandbox
 
 ```sh
+# sandbox
 terraform -chdir=infra init --backend-config=env/sandbox/backend.hcl
 terraform -chdir=infra fmt -recursive && terraform -chdir=infra validate
 terraform -chdir=infra plan -var-file=envs/sandbox/terraform.tfvars
@@ -8,6 +9,14 @@ terraform -chdir=infra plan -var-file=envs/sandbox/terraform.tfvars
 terraform -chdir=infra apply -auto-approve -var-file="env/sandbox/terraform.tfvars"
 
 terraform -chdir=infra destroy -auto-approve -var-file="env/sandbox/terraform.tfvars"
+
+# dev
+terraform -chdir=infra init --backend-config=env/dev/backend.hcl -reconfigure
+terraform -chdir=infra destroy -auto-approve -var-file="env/dev/terraform.tfvars"
+
+# test
+terraform -chdir=infra init --backend-config=env/test/backend.hcl -reconfigure
+terraform -chdir=infra destroy -auto-approve -var-file="env/test/terraform.tfvars"
 ```
 
 ---
@@ -19,7 +28,7 @@ terraform -chdir=infra destroy -auto-approve -var-file="env/sandbox/terraform.tf
 trivy config ./infra
 
 # Scan tfvars
-trivy config --tf-vars env/dev/terraform.tfvars .
+trivy config --tf-vars ./infra/env/dev/terraform.tfvars ./infra
 
 # Include secret scanning
 trivy fs --scanners secret,misconfig ./

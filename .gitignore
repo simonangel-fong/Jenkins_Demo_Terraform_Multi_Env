@@ -39,3 +39,5 @@ terraform.rc
 sandbox/
 
 backend.hcl
+
+note.md

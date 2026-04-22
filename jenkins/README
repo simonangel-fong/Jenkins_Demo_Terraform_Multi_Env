@@ -20,7 +20,11 @@ kubectl create secret generic jenkins-secrets \
   --from-literal=aws-access-key-id='' \
   --from-literal=aws-secret-access-key='' \
   --from-literal=github-token=''  \
-  --from-literal=tf-state-bucket=''
+  --from-literal=tf-state-bucket='' \
+  --from-literal=mail-smtp-host='smtp.gmail.com' \
+  --from-literal=mail-smtp-port='465' \
+  --from-literal=mail-smtp-user='' \
+  --from-literal=mail-smtp-password=''
 
 
 kubectl create secret generic jenkins-admin \
@@ -29,8 +33,5 @@ kubectl create secret generic jenkins-admin \
 
 kubectl delete secret jenkins-secrets
 kubectl delete secret jenkins-admin
-
-kubectl create configmap jenkins-env    \
-  --from-literal=tf-state-bucket=''
 
 ```
