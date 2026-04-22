@@ -229,10 +229,22 @@ pipeline {
       echo "###############################"
     }
     success {
-      echo 'Terraform promotion to test completed successfully, and Trivy plus AWS confirmation both passed.'
+      emailext(
+        to: "${env.MAIL_SMTP_USER}",
+        subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
+        body: """<p>Job: <b>${env.JOB_NAME}</b> | Build: <b>#${env.BUILD_NUMBER}</b> | Status: <b>SUCCESS</b></p>
+<p>Console: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
+        mimeType: 'text/html'
+      )
     }
     failure {
-      echo 'Pipeline failed. Check the stage output above.'
+      emailext(
+        to: "${env.MAIL_SMTP_USER}",
+        subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
+        body: """<p>Job: <b>${env.JOB_NAME}</b> | Build: <b>#${env.BUILD_NUMBER}</b> | Status: <b>FAILURE</b></p>
+<p>Console: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
+        mimeType: 'text/html'
+      )
     }
   }
 }

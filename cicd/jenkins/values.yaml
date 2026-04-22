@@ -25,6 +25,26 @@ controller:
         secretKeyRef:
           name: jenkins-secrets
           key: tf-state-bucket
+    - name: MAIL_SMTP_HOST
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-host
+    - name: MAIL_SMTP_PORT
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-port
+    - name: MAIL_SMTP_USER
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-user
+    - name: MAIL_SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: mail-smtp-password
 
   serviceType: ClusterIP
 
@@ -52,30 +72,70 @@ controller:
       welcome-message: |
         jenkins:
           systemMessage: "Jenkins configured via Helm and JCasC for Terraform CI/CD"
-
+      
+      tools: |
+        tool:
+          git:
+            installations:
+            - home: "git"
+              name: "Default"
+          mavenGlobalConfig:
+            globalSettingsProvider: "standard"
+            settingsProvider: "standard"
+      
       credentials: |
         credentials:
           system:
             domainCredentials:
               - credentials:
                   - aws:
-                      scope: GLOBAL
                       id: "aws-creds"
                       accessKey: "${AWS_ACCESS_KEY_ID}"
                       secretKey: "${AWS_SECRET_ACCESS_KEY}"
+                      scope: GLOBAL
                       description: "AWS credentials for Terraform pipeline"
 
                   - string:
-                      scope: GLOBAL
                       id: "github-token"
                       secret: "${GITHUB_TOKEN}"
+                      scope: GLOBAL
                       description: "GitHub token for Jenkins pipeline access"
 
                   - string:
-                      scope: GLOBAL
                       id: "tf-state-bucket"
                       secret: "${TF_STATE_BUCKET}"
+                      scope: GLOBAL
                       description: "Terraform remote state bucket"
+
+                  - usernamePassword:
+                      id: "gmail_cred"
+                      username: "${MAIL_SMTP_USER}"
+                      password: "${MAIL_SMTP_PASSWORD}"
+                      usernameSecret: true
+                      scope: GLOBAL
+
+      email: |
+        unclassified:
+          location:
+            adminAddress: "${MAIL_SMTP_USER}"
+          buildDiscarders:
+            configuredBuildDiscarders:
+            - "jobBuildDiscarder"
+          email-ext:
+            mailAccount:
+              credentialsId: "gmail_cred"
+              smtpHost: "smtp.gmail.com"
+              smtpPort: "465"
+              useSsl: true
+          mailer:
+            authentication:
+              username: "${MAIL_SMTP_USER}"
+              password: "${MAIL_SMTP_PASSWORD}"
+            charset: "UTF-8"
+            smtpHost: "smtp.gmail.com"
+            smtpPort: "465"
+            useSsl: true
+            useTls: false
 
       jobs: |
         jobs:
@@ -114,7 +174,7 @@ controller:
                         branches('*/master')
                       }
                     }
-                    scriptPath('cicd/jenkins/Jenkinsfile')
+                    scriptPath('Jenkinsfile')
                   }
                 }
               }
