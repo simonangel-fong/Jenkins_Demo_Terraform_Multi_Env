@@ -1,3 +1,5 @@
+@Library('jenkins-terraform-shared-lib') _
+
 pipeline {
   agent {
     kubernetes {
@@ -13,95 +15,36 @@ pipeline {
   }
 
   environment {
-    AWS_REGION   = 'ca-central-1'
-    TF_DIR       = 'infra'
-    TF_VAR_env   = 'dev'
-    TF_STATE_KEY = "jenkins-terraform/${TF_VAR_env}/terraform.tfstate"
+    AWS_REGION        = 'ca-central-1'
+    TF_DIR            = 'infra'
+    STATE_BUCKET_CRED = 'tf-state-bucket'
   }
 
   stages {
 
-    stage('Fmt') {
+    stage('Deploy Dev') {
       steps {
-        container('terraform') {
-          sh 'terraform -chdir=${TF_DIR} fmt -recursive -check'
-        }
+        terraformDeploy('dev', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
       }
     }
 
-    stage('Init') {
+    stage('Deploy Test') {
       steps {
-        container('terraform') {
-          withCredentials([
-            [$class: 'AmazonWebServicesCredentialsBinding',
-             credentialsId: 'aws-creds',
-             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-            string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET')
-          ]) {
-            sh '''
-              terraform -chdir=${TF_DIR} init \
-                -backend-config="bucket=${TF_STATE_BUCKET}" \
-                -backend-config="key=${TF_STATE_KEY}" \
-                -backend-config="region=${AWS_REGION}"
-            '''
-          }
-        }
+        terraformDeploy('test', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
       }
     }
 
-    stage('Validate') {
+    stage('Approve Prod') {
       steps {
-        container('terraform') {
-          sh 'terraform -chdir=${TF_DIR} validate'
-        }
+        input message: 'Deploy to production?', ok: 'Approve'
       }
     }
 
-    stage('Scan') {
+    stage('Deploy Prod') {
       steps {
-        container('trivy') {
-          sh 'trivy config ${TF_DIR}'
-        }
+        terraformDeploy('prod', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
       }
     }
 
-    stage('Plan') {
-      steps {
-        container('terraform') {
-          withCredentials([
-            [$class: 'AmazonWebServicesCredentialsBinding',
-             credentialsId: 'aws-creds',
-             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-          ]) {
-            sh '''
-              terraform -chdir=${TF_DIR} plan -out=tfplan
-              terraform -chdir=${TF_DIR} show -no-color tfplan > ${TF_DIR}/tfplan.txt
-            '''
-          }
-        }
-      }
-      post {
-        always {
-          archiveArtifacts artifacts: "${TF_DIR}/tfplan, ${TF_DIR}/tfplan.txt", fingerprint: true
-        }
-      }
-    }
-
-    stage('Apply') {
-      steps {
-        container('terraform') {
-          withCredentials([
-            [$class: 'AmazonWebServicesCredentialsBinding',
-             credentialsId: 'aws-creds',
-             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-          ]) {
-            sh 'terraform -chdir=${TF_DIR} apply -auto-approve tfplan'
-          }
-        }
-      }
-    }
   }
 }
