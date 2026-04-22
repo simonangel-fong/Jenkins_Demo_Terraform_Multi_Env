@@ -134,25 +134,25 @@ project/
 Checkout → fmt → init → validate → plan (dev) → archive
 ```
 
-| Stage    | Command / Action                                                        |
-| -------- | ----------------------------------------------------------------------- |
-| Checkout | Checkout source from feature branch                                     |
-| Format   | `terraform fmt -recursive -check`                                       |
-| Init     | `terraform init`                                                        |
-| Validate | `terraform validate`                                                    |
-| Plan     | `terraform plan -var-file=envs/dev/terraform.tfvars -out=tfplan.binary` |
-| Archive  | Archive `tfplan.binary`; optionally save text plan output for review    |
+| Stage    | Command / Action                                                     |
+| -------- | -------------------------------------------------------------------- |
+| Checkout | Checkout source from feature branch                                  |
+| Format   | `terraform fmt -recursive -check`                                    |
+| Init     | `terraform init`                                                     |
+| Validate | `terraform validate`                                                 |
+| Plan     | `terraform plan -var="env=${TF_VAR_ENV}" -out=tfplan.binary`         |
+| Archive  | Archive `tfplan.binary`; optionally save text plan output for review |
 
 > No terraform apply on feature branches.
 > The Terraform plan serves as the infrastructure change preview for PR review.
 
 **Done when:**
 
-- [ ] Pipeline triggers automatically on push to feature/\*
-- [ ] terraform fmt -check failure stops the pipeline
-- [ ] terraform validate failure stops the pipeline
-- [ ] Terraform plan runs successfully against dev variables
-- [ ] Plan output is visible in Jenkins logs or archived as an artifact
+- [x] Pipeline triggers automatically on push to feature/\*
+- [x] terraform fmt -check failure stops the pipeline
+- [x] terraform validate failure stops the pipeline
+- [x] Terraform plan runs successfully against dev variables
+- [x] Plan output is visible in Jenkins logs or archived as an artifact
 
 ---
 
@@ -172,7 +172,7 @@ Checkout → fmt → validate → plan (dev) → apply (dev) → confirm
 | -------- | --------------------------------------------------------------------------------------- |
 | fmt      | `terraform fmt -recursive -check`                                                       |
 | validate | `terraform validate`                                                                    |
-| plan     | `terraform plan -var-file=envs/dev/terraform.tfvars -out=tfplan`                        |
+| Plan     | `terraform plan -var="env=${TF_VAR_ENV}" -out=tfplan.binary`                            |
 | apply    | `terraform apply tfplan`                                                                |
 | confirm  | `aws ec2 describe-vpcs --filters Name=tag:Env,Values=dev` — fail pipeline if VPC absent |
 

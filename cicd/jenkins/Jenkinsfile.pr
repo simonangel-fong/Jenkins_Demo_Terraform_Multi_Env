@@ -19,7 +19,6 @@ pipeline {
     TF_STATE_KEY  = 'jenkins-terraform/dev/terraform.tfstate'
     TF_PLAN_FILE  = 'tfplan.binary'
     TF_PLAN_TXT   = 'tfplan.txt'
-    TF_VAR_FILE   = 'envs/dev/terraform.tfvars'
     TF_VAR_ENV    = 'dev'
   }
 
@@ -27,24 +26,28 @@ pipeline {
     pollSCM('H/5 * * * *')
   }
 
+  parameters {
+    booleanParam(name: 'MANUAL_TRIGGER', defaultValue: false, description: 'Check to trigger pipeline manually')
+  }
+
   stages {
 
-    // stage('Branch Guard') {
-    //   steps {
-    //     script {
-    //       def branchName = env.BRANCH_NAME ?: sh(
-    //         script: 'git rev-parse --abbrev-ref HEAD',
-    //         returnStdout: true
-    //       ).trim()
+    stage('Branch Guard') {
+      steps {
+        script {
+          def branchName = env.BRANCH_NAME ?: sh(
+            script: 'git rev-parse --abbrev-ref HEAD',
+            returnStdout: true
+          ).trim()
 
-    //       echo "Detected branch: ${branchName}"
+          echo "Detected branch: ${branchName}"
 
-    //       if (branchName != 'master') {
-    //         error("Pipeline aborted: only master branch is supported. Current branch: ${branchName}")
-    //       }
-    //     }
-    //   }
-    // }
+          if (!branchName.startsWith('feature/')) {
+            error("Pipeline aborted: only feature/* branches are supported. Current branch: ${branchName}")
+          }
+        }
+      }
+    }
 
     stage('Checkout') {
       steps {
@@ -77,6 +80,7 @@ pipeline {
             echo "Terraform init"
             echo "###############################"
             sh '''
+              
               terraform init \
                 -input=false \
                 -reconfigure \
@@ -93,15 +97,15 @@ pipeline {
     stage('Validate') {
       steps {
         dir("${env.TF_ROOT}") {
-          echo "###############################"
-          echo "Terraform validate"
-          echo "###############################"
+            echo "###############################"
+            echo "Terraform validate"
+            echo "###############################"
           sh 'terraform validate'
         }
       }
     }
 
-    stage('Plan (dev)') {
+    stage('Plan') {
       steps {
         dir("${env.TF_ROOT}") {
           withCredentials([
@@ -111,7 +115,7 @@ pipeline {
             ]
           ]) {
             echo "###############################"
-            echo "Terraform plan (dev)"
+            echo "Terraform plan"
             echo "###############################"
             sh '''
               terraform plan \
@@ -139,71 +143,19 @@ pipeline {
       }
     }
 
-    stage('Apply (dev)') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          withCredentials([
-            [
-              $class: 'AmazonWebServicesCredentialsBinding',
-              credentialsId: 'aws-creds'
-            ]
-          ]) {
-            echo "###############################"
-            echo "Terraform apply (dev)"
-            echo "###############################"
-            sh '''
-              terraform apply -input=false "${TF_PLAN_FILE}"
-            '''
-          }
-        }
-      }
-    }
-
-    stage('Confirm') {
-      steps {
-        container('aws') {
-          withCredentials([
-            [
-              $class: 'AmazonWebServicesCredentialsBinding',
-              credentialsId: 'aws-creds'
-            ]
-          ]) {
-            echo "###############################"
-            echo "Confirm dev VPC exists"
-            echo "###############################"
-            sh '''
-              set -e
-
-              VPC_ID=$(aws ec2 describe-vpcs \
-                --region "${AWS_REGION}" \
-                --filters "Name=tag:Env,Values=dev" \
-                --query 'Vpcs[0].VpcId' \
-                --output text)
-
-              if [ -z "${VPC_ID}" ] || [ "${VPC_ID}" = "None" ]; then
-                echo "ERROR: No VPC found with tag Env=dev"
-                exit 1
-              fi
-
-              echo "Confirmed VPC exists: ${VPC_ID}"
-            '''
-          }
-        }
-      }
-    }
   }
 
   post {
     always {
       echo "###############################"
-      echo "Pipeline finished."
+      echo 'Pipeline finished.'
       echo "###############################"
     }
     success {
-      echo 'Terraform deploy to dev completed successfully, and AWS CLI confirmed the VPC exists.'
+      echo 'Terraform fmt, validate, and plan completed successfully. Plan archived for PR review.'
     }
     failure {
-      echo 'Pipeline failed. Check the stage output above.'
+      echo 'Pipeline failed. Check the stage output above — fmt, validate, or plan may have errors.'
     }
   }
 }
