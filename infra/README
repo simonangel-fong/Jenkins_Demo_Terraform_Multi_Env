@@ -19,7 +19,7 @@ terraform -chdir=infra destroy -auto-approve -var-file="env/sandbox/terraform.tf
 trivy config ./infra
 
 # Scan tfvars
-trivy config --tf-vars env/dev/terraform.tfvars .
+trivy config --tf-vars ./infra/env/dev/terraform.tfvars ./infra
 
 # Include secret scanning
 trivy fs --scanners secret,misconfig ./
