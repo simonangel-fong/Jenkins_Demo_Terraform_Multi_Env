@@ -19,22 +19,25 @@ sandbox/dev  →  dev  →  test  →  prod
 
 ```
 project/
+├── docs/plan.md
 ├── infra/
 │   ├── modules/vpc/
 │   │   ├── vpc.tf
 │   │   ├── variables.tf
 │   │   └── outputs.tf
 │   ├── env/
-│   │   ├── dev/    (terraform.tfvars, backend.hcl)
-│   │   ├── test/   (terraform.tfvars, backend.hcl)
-│   │   └── prod/   (terraform.tfvars, backend.hcl)
+│   │   ├── dev/      (terraform.tfvars, backend.hcl)
+│   │   ├── test/     (terraform.tfvars, backend.hcl)
+│   │   └── prod/     (terraform.tfvars, backend.hcl)
 │   ├── 01_variables.tf
 │   ├── 02_providers.tf
 │   └── 03_main.tf
-├── cicd/jenkins/
-│   ├── Jenkinsfile       (master pipeline: dev→test→prod)
-│   └── values.yaml       (Jenkins Helm config)
-└── docs/plan.md
+├── jenkins/
+│   ├── script/
+│   │   ├── deploy.sh  (fmt → init → validate → scan → plan → archive → apply)
+│   │   └── test.sh    (aws ec2 describe-vpcs filtered by Environment tag)
+│   └── values.yaml    (Jenkins Helm config)
+└── Jenkinsfile        (master pipeline: dev→test→prod)
 ```
 
 ---
@@ -76,25 +79,28 @@ Deploy Jenkins on Kubernetes via Helm, ready to run pipeline jobs.
 
 ---
 
-## Step 3 — Pipeline
-
-### PR Pipeline (`Jenkinsfile.pr`) — feature/\* branches
+## Step 3 — Master Pipeline (`Jenkinsfile`) — merge to master
 
 ```
-branch-guard → checkout → fmt → init → validate → plan → archive
-```
+checkout
+→ dev deploy [deploy module] → [test module]
+→ test deploy [deploy module] → [test module]
+→ prod deploy [manual approval] → [deploy module]
 
-Validates the change is safe before merge. Plan is archived for review.
 
-### Master Pipeline (`Jenkinsfile`) — merge to master
-
-```
-checkout → fmt → init → validate → trivy-scan → plan → archive → apply
   (repeat per env: dev → test → prod)
   prod requires manual approval gate
 ```
 
-**Deploy steps per environment:**
+---
+
+**Deploy module**
+
+- jenkins\script\deploy.sh
+
+```txt
+fmt → init → validate → trivy-scan → plan → archive → apply
+```
 
 | Step     | Command                                               |
 | -------- | ----------------------------------------------------- |
@@ -105,13 +111,12 @@ checkout → fmt → init → validate → trivy-scan → plan → archive → a
 | archive  | `archiveArtifacts tfplan.binary + tfplan.txt`         |
 | apply    | `terraform apply tfplan.binary`                       |
 
-**Test/Confirm:** After each apply, run `aws ec2 describe-vpcs` filtered by `Environment` tag to confirm the VPC exists.
+---
 
-**Prod gate:** `input` step requiring manual approval before plan/apply.
+**Test module**:
+
+- jenkins\script\test.sh
+- run `aws ec2 describe-vpcs` to simulate the testing
+  - filtered by `Environment` tag to confirm the VPC exists.
 
 **Done when:**
-
-- [ ] PR pipeline runs on `feature/vpc` — fmt, validate, plan all pass
-- [ ] Master pipeline promotes dev → test automatically
-- [ ] Prod stage pauses for approval, then applies cleanly
-- [ ] AWS confirm step verifies VPC tag in each environment

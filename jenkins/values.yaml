@@ -79,9 +79,6 @@ controller:
             installations:
             - home: "git"
               name: "Default"
-          mavenGlobalConfig:
-            globalSettingsProvider: "standard"
-            settingsProvider: "standard"
       
       credentials: |
         credentials:
@@ -113,6 +110,7 @@ controller:
                       password: "${MAIL_SMTP_PASSWORD}"
                       usernameSecret: true
                       scope: GLOBAL
+                      description: "Gmail SMTP credentials for Jenkins notifications"
 
       email: |
         unclassified:
@@ -124,16 +122,16 @@ controller:
           email-ext:
             mailAccount:
               credentialsId: "gmail_cred"
-              smtpHost: "smtp.gmail.com"
-              smtpPort: "465"
+              smtpHost: "${MAIL_SMTP_HOST}"
+              smtpPort: "${MAIL_SMTP_PORT}"
               useSsl: true
           mailer:
             authentication:
               username: "${MAIL_SMTP_USER}"
               password: "${MAIL_SMTP_PASSWORD}"
             charset: "UTF-8"
-            smtpHost: "smtp.gmail.com"
-            smtpPort: "465"
+            smtpHost: "${MAIL_SMTP_HOST}"
+            smtpPort: "${MAIL_SMTP_PORT}"
             useSsl: true
             useTls: false
 
@@ -186,9 +184,9 @@ persistence:
 agent:
   enabled: true
 
-  maxRequestsPerHostStr: "32"
-  retentionTimeout: "5"
-  waitForPodSec: "120"
+  maxRequestsPerHostStr: 32
+  retentionTimeout: 5
+  waitForPodSec: 120
 
   podTemplates:
     terraform: |
