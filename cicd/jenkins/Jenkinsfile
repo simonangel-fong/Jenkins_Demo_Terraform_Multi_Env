@@ -145,7 +145,7 @@ pipeline {
             sh '''
               terraform plan \
                 -input=false \
-                -var-file="${TF_VAR_FILE}" \
+                -var="env=${TF_VAR_ENV}"  \
                 -out="${TF_PLAN_FILE}"
 
               terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
@@ -205,7 +205,7 @@ pipeline {
 
               VPC_ID=$(aws ec2 describe-vpcs \
                 --region "${AWS_REGION}" \
-                --filters "Name=tag:Env,Values=test" \
+                --filters "Name=tag:Environment,Values=dev" \
                 --query 'Vpcs[0].VpcId' \
                 --output text)
 
