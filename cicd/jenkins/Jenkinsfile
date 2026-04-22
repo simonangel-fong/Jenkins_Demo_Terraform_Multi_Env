@@ -68,30 +68,29 @@ pipeline {
       steps {
         dir("${env.TF_ROOT}") {
           withCredentials([string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET')]) {
-            sh 'echo "The secret is $TF_STATE_BUCKET"'
+            sh '''
+              terraform init \
+                -input=false \
+                -reconfigure \
+                -backend-config="bucket=${TF_STATE_BUCKET}" \
+                -backend-config="key=${TF_STATE_KEY}" \
+                -backend-config="region=${AWS_REGION}" \
+                -backend-config="encrypt=true"
+            '''
           }
-          // sh '''
-          //   terraform init \
-          //     -input=false \
-          //     -reconfigure \
-          //     -backend-config="bucket=${TF_STATE_BUCKET}" \
-          //     -backend-config="key=${TF_STATE_KEY}" \
-          //     -backend-config="region=${AWS_REGION}" \
-          //     -backend-config="encrypt=true"
-          // '''
         }
       }
     }
 
-    // stage('validate') {
-    //   steps {
-    //     dir("${env.TF_ROOT}") {
-    //       sh '''
-    //         terraform validate
-    //       '''
-    //     }
-    //   }
-    // }
+    stage('validate') {
+      steps {
+        dir("${env.TF_ROOT}") {
+          sh '''
+            terraform validate
+          '''
+        }
+      }
+    }
 
     // stage('plan (dev)') {
     //   steps {
