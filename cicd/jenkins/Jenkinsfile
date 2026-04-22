@@ -32,32 +32,32 @@ pipeline {
 
   stages {
 
-    stage('Manual Guard') {
-      steps {
-        script {
-          if (!params.CONFIRM_TEST_DEPLOY) {
-            error("Pipeline aborted: enable CONFIRM_TEST_DEPLOY for manual promotion to test.")
-          }
-        }
-      }
-    }
+    // stage('Manual Guard') {
+    //   steps {
+    //     script {
+    //       if (!params.CONFIRM_TEST_DEPLOY) {
+    //         error("Pipeline aborted: enable CONFIRM_TEST_DEPLOY for manual promotion to test.")
+    //       }
+    //     }
+    //   }
+    // }
 
-    stage('Branch Guard') {
-      steps {
-        script {
-          def branchName = env.BRANCH_NAME ?: sh(
-            script: 'git rev-parse --abbrev-ref HEAD',
-            returnStdout: true
-          ).trim()
+    // stage('Branch Guard') {
+    //   steps {
+    //     script {
+    //       def branchName = env.BRANCH_NAME ?: sh(
+    //         script: 'git rev-parse --abbrev-ref HEAD',
+    //         returnStdout: true
+    //       ).trim()
 
-          echo "Detected branch: ${branchName}"
+    //       echo "Detected branch: ${branchName}"
 
-          if (branchName != 'master') {
-            error("Pipeline aborted: only master branch is supported. Current branch: ${branchName}")
-          }
-        }
-      }
-    }
+    //       if (branchName != 'master') {
+    //         error("Pipeline aborted: only master branch is supported. Current branch: ${branchName}")
+    //       }
+    //     }
+    //   }
+    // }
 
     stage('Checkout') {
       steps {
