@@ -58,6 +58,14 @@ pipeline {
       }
     }
 
+    stage('Scan') {
+      steps {
+        container('trivy') {
+          sh 'trivy config ${TF_DIR}'
+        }
+      }
+    }
+
     stage('Plan') {
       steps {
         container('terraform') {
@@ -67,8 +75,16 @@ pipeline {
              accessKeyVariable: 'AWS_ACCESS_KEY_ID',
              secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
           ]) {
-            sh 'terraform -chdir=${TF_DIR} plan -out=tfplan'
+            sh '''
+              terraform -chdir=${TF_DIR} plan -out=tfplan
+              terraform -chdir=${TF_DIR} show -no-color tfplan > ${TF_DIR}/tfplan.txt
+            '''
           }
+        }
+      }
+      post {
+        always {
+          archiveArtifacts artifacts: "${TF_DIR}/tfplan, ${TF_DIR}/tfplan.txt", fingerprint: true
         }
       }
     }
