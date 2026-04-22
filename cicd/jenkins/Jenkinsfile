@@ -13,40 +13,37 @@ pipeline {
   }
 
   environment {
-    AWS_REGION       = 'ca-central-1'
+    AWS_REGION    = 'ca-central-1'
 
-
-    TF_ROOT           = 'infra'
-    TF_STATE_KEY      = 'jenkins-terraform/dev/terraform.tfstate'
-    TF_PLAN_FILE      = 'tfplan.binary'
-    TF_PLAN_TXT       = 'tfplan.txt'
-    TF_VAR_ENV        = 'dev'
-
-    // TF_STATE_BUCKET  = ''
+    TF_ROOT       = 'infra'
+    TF_STATE_KEY  = 'jenkins-terraform/dev/terraform.tfstate'
+    TF_PLAN_FILE  = 'tfplan.binary'
+    TF_PLAN_TXT   = 'tfplan.txt'
+    TF_VAR_FILE   = 'envs/dev/terraform.tfvars'
   }
 
   triggers {
-    // optional if you use webhook instead
     pollSCM('H/5 * * * *')
   }
 
   stages {
-    // stage('Branch Guard') {
-    //   steps {
-    //     script {
-    //       def branchName = env.BRANCH_NAME ?: sh(
-    //         script: 'git rev-parse --abbrev-ref HEAD',
-    //         returnStdout: true
-    //       ).trim()
 
-    //       echo "Detected branch: ${branchName}"
+    stage('Branch Guard') {
+      steps {
+        script {
+          def branchName = env.BRANCH_NAME ?: sh(
+            script: 'git rev-parse --abbrev-ref HEAD',
+            returnStdout: true
+          ).trim()
 
-    //       if (!branchName.startsWith('feature/')) {
-    //         error("This pipeline only supports feature/* branches. Current branch: ${branchName}")
-    //       }
-    //     }
-    //   }
-    // }
+          echo "Detected branch: ${branchName}"
+
+          if (!branchName.startsWith('feature/')) {
+            error("Pipeline aborted: only feature/* branches are supported. Current branch: ${branchName}")
+          }
+        }
+      }
+    }
 
     stage('Checkout') {
       steps {
@@ -54,18 +51,32 @@ pipeline {
       }
     }
 
-    stage('terraform') {
+    stage('Format') {
+      steps {
+        dir("${env.TF_ROOT}") {
+          echo "###############################"
+          echo "Terraform fmt"
+          echo "###############################"
+          sh 'terraform fmt -recursive -check'
+        }
+      }
+    }
+
+    stage('Init') {
       steps {
         dir("${env.TF_ROOT}") {
           withCredentials([
             string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET'),
-              [
-                $class: 'AmazonWebServicesCredentialsBinding',
-                credentialsId: 'aws-creds'
-              ]
+            [
+              $class: 'AmazonWebServicesCredentialsBinding',
+              credentialsId: 'aws-creds'
+            ]
           ]) {
+            echo "###############################"
+            echo "Terraform init"
+            echo "###############################"
             sh '''
-              terraform fmt -recursive -check
+              
               terraform init \
                 -input=false \
                 -reconfigure \
@@ -73,39 +84,74 @@ pipeline {
                 -backend-config="key=${TF_STATE_KEY}" \
                 -backend-config="region=${AWS_REGION}" \
                 -backend-config="encrypt=true"
-
-              terraform validate
-
-              terraform plan \
-                -input=false \
-                -var="env=${TF_VAR_ENV}"  \
-                -out="${TF_PLAN_FILE}"
-
-              terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"   
             '''
           }
         }
       }
     }
 
-    stage('archive') {
+    stage('Validate') {
       steps {
-        archiveArtifacts artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}", fingerprint: true
+        dir("${env.TF_ROOT}") {
+            echo "###############################"
+            echo "Terraform validate"
+            echo "###############################"
+          sh 'terraform validate'
+        }
       }
     }
+
+    stage('Plan') {
+      steps {
+        dir("${env.TF_ROOT}") {
+          withCredentials([
+            [
+              $class: 'AmazonWebServicesCredentialsBinding',
+              credentialsId: 'aws-creds'
+            ]
+          ]) {
+            echo "###############################"
+            echo "Terraform plan"
+            echo "###############################"
+            sh '''
+              terraform plan \
+                -input=false \
+                -var-file="${TF_VAR_FILE}" \
+                -out="${TF_PLAN_FILE}"
+
+              terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Archive') {
+      steps {
+        echo "###############################"
+        echo "Archive Artifacts"
+        echo "###############################"
+
+        archiveArtifacts(
+          artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}",
+          fingerprint: true
+        )
+      }
+    }
+
   }
 
   post {
     always {
+      echo "###############################"
       echo 'Pipeline finished.'
+      echo "###############################"
     }
-
     success {
-      echo 'Terraform validation and plan completed successfully.'
+      echo 'Terraform fmt, validate, and plan completed successfully. Plan archived for PR review.'
     }
-
     failure {
-      echo 'Pipeline failed. Check fmt / validate / plan output.'
+      echo 'Pipeline failed. Check the stage output above — fmt, validate, or plan may have errors.'
     }
   }
 }
