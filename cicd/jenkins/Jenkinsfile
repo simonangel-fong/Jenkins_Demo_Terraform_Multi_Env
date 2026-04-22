@@ -67,18 +67,23 @@ pipeline {
     stage('init') {
       steps {
         dir("${env.TF_ROOT}") {
-          withCredentials([string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET')]) {
-            withAWS(credentials: 'aws-terraform-creds', region: "${AWS_REGION}") {
-              sh '''
-                terraform init \
-                  -input=false \
-                  -reconfigure \
-                  -backend-config="bucket=${TF_STATE_BUCKET}" \
-                  -backend-config="key=${TF_STATE_KEY}" \
-                  -backend-config="region=${AWS_REGION}" \
-                  -backend-config="encrypt=true"
-              '''
-            }
+          withCredentials([
+            string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET'),
+            usernamePassword(
+              credentialsId: 'aws-terraform-creds',
+              usernameVariable: 'AWS_ACCESS_KEY_ID',
+              passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+            )
+          ]) {
+            sh '''
+              terraform init \
+                -input=false \
+                -reconfigure \
+                -backend-config="bucket=${TF_STATE_BUCKET}" \
+                -backend-config="key=${TF_STATE_KEY}" \
+                -backend-config="region=${AWS_REGION}" \
+                -backend-config="encrypt=true"
+            '''
           }
         }
       }
