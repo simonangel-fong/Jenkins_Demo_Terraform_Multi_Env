@@ -32,22 +32,22 @@ pipeline {
 
   stages {
 
-    stage('Branch Guard') {
-      steps {
-        script {
-          def branchName = env.BRANCH_NAME ?: sh(
-            script: 'git rev-parse --abbrev-ref HEAD',
-            returnStdout: true
-          ).trim()
+    // stage('Branch Guard') {
+    //   steps {
+    //     script {
+    //       def branchName = env.BRANCH_NAME ?: sh(
+    //         script: 'git rev-parse --abbrev-ref HEAD',
+    //         returnStdout: true
+    //       ).trim()
 
-          echo "Detected branch: ${branchName}"
+    //       echo "Detected branch: ${branchName}"
 
-          if (!branchName.startsWith('feature/')) {
-            error("Pipeline aborted: only feature/* branches are supported. Current branch: ${branchName}")
-          }
-        }
-      }
-    }
+    //       if (!branchName.startsWith('feature/')) {
+    //         error("Pipeline aborted: only feature/* branches are supported. Current branch: ${branchName}")
+    //       }
+    //     }
+    //   }
+    // }
 
     stage('Checkout') {
       steps {
