@@ -26,6 +26,10 @@ pipeline {
     pollSCM('H/5 * * * *')
   }
 
+  parameters {
+    booleanParam(name: 'MANUAL_TRIGGER', defaultValue: false, description: 'Check to trigger pipeline manually')
+  }
+
   stages {
 
     stage('Branch Guard') {
