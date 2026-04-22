@@ -54,18 +54,7 @@ pipeline {
       }
     }
 
-    stage('fmt') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          echo "Terraform Root Dir: ${env.TF_ROOT}"
-          sh '''
-            terraform fmt -recursive -check
-          '''
-        }
-      }
-    }
-
-    stage('init') {
+    stage('terraform') {
       steps {
         dir("${env.TF_ROOT}") {
           withCredentials([
@@ -76,6 +65,7 @@ pipeline {
               ]
           ]) {
             sh '''
+              terraform fmt -recursive -check
               terraform init \
                 -input=false \
                 -reconfigure \
@@ -83,40 +73,20 @@ pipeline {
                 -backend-config="key=${TF_STATE_KEY}" \
                 -backend-config="region=${AWS_REGION}" \
                 -backend-config="encrypt=true"
-            '''
-          }
-        }
-      }
-    }
 
-    stage('validate') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          sh '''
-            terraform validate
-          '''
-        }
-      }
-    }
+              terraform validate
 
-    stage('plan (dev)') {
-      steps {
-        dir("${env.TF_ROOT}") {
-          withCredentials([
-            [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-terraform-creds']
-          ]) {
-            sh '''
               terraform plan \
                 -input=false \
                 -var="env=${TF_VAR_ENV}"  \
                 -out="${TF_PLAN_FILE}"
 
-              terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
+              terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"   
             '''
           }
         }
       }
-    }  
+    }
 
     // stage('archive') {
     //   steps {
