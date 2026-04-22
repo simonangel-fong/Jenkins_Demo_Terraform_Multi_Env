@@ -159,38 +159,38 @@ pipeline {
       }
     }
 
-    // stage('Confirm') {
-    //   steps {
-    //     container('aws') {
-    //       withCredentials([
-    //         [
-    //           $class: 'AmazonWebServicesCredentialsBinding',
-    //           credentialsId: 'aws-creds'
-    //         ]
-    //       ]) {
-    //         echo "###############################"
-    //         echo "Confirm dev VPC exists"
-    //         echo "###############################"
-    //         sh '''
-    //           set -e
+    stage('Confirm') {
+      steps {
+        container('aws') {
+          withCredentials([
+            [
+              $class: 'AmazonWebServicesCredentialsBinding',
+              credentialsId: 'aws-creds'
+            ]
+          ]) {
+            echo "###############################"
+            echo "Confirm dev VPC exists"
+            echo "###############################"
+            sh '''
+              set -e
 
-    //           VPC_ID=$(aws ec2 describe-vpcs \
-    //             --region "${AWS_REGION}" \
-    //             --filters "Name=tag:Env,Values=dev" \
-    //             --query 'Vpcs[0].VpcId' \
-    //             --output text)
+              VPC_ID=$(aws ec2 describe-vpcs \
+                --region "${AWS_REGION}" \
+                --filters "Name=tag:Env,Values=dev" \
+                --query 'Vpcs[0].VpcId' \
+                --output text)
 
-    //           if [ -z "${VPC_ID}" ] || [ "${VPC_ID}" = "None" ]; then
-    //             echo "ERROR: No VPC found with tag Env=dev"
-    //             exit 1
-    //           fi
+              if [ -z "${VPC_ID}" ] || [ "${VPC_ID}" = "None" ]; then
+                echo "ERROR: No VPC found with tag Env=dev"
+                exit 1
+              fi
 
-    //           echo "Confirmed VPC exists: ${VPC_ID}"
-    //         '''
-    //       }
-    //     }
-    //   }
-    // }
+              echo "Confirmed VPC exists: ${VPC_ID}"
+            '''
+          }
+        }
+      }
+    }
   }
 
   post {
