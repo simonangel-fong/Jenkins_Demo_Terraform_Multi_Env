@@ -44,7 +44,8 @@ controller:
     - ssh-credentials
     - junit
     - timestamper
-
+    - email-ext
+    
   JCasC:
     defaultConfig: true
     configScripts:
