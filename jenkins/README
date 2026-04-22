@@ -2,7 +2,7 @@
   - https://artifacthub.io/packages/helm/jenkinsci/jenkins
 
 ```sh
-helm upgrade --install jenkins jenkins/jenkins -f cicd/jenkins/values.yaml
+helm upgrade --install jenkins jenkins/jenkins -f jenkins/values.yaml
 kubectl --namespace default port-forward svc/jenkins 8080:8080
 # kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/additional/chart-admin-password
 
