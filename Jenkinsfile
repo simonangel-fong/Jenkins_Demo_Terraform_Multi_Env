@@ -1,5 +1,3 @@
-@Library('jenkins-terraform-shared-lib') _
-
 pipeline {
   agent {
     kubernetes {
