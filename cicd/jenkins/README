@@ -18,8 +18,10 @@ helm uninstall jenkins
 ```sh
 kubectl create secret generic jenkins-secrets \
   --from-literal=aws-access-key-id='' \
-  --from-literal=aws-secret-access-key='+5WSAlMnQqMrPCoHHYFAYhy/BJvavD' \
-  --from-literal=github-token=''
+  --from-literal=aws-secret-access-key='' \
+  --from-literal=github-token=''  \
+  --from-literal=tf-state-bucket=''
+
 
 kubectl create secret generic jenkins-admin \
   --from-literal=jenkins-admin-user=admin \

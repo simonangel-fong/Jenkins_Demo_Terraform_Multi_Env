@@ -20,6 +20,11 @@ controller:
         secretKeyRef:
           name: jenkins-secrets
           key: github-token
+    - name: TF_STATE_BUCKET
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-secrets
+          key: tf-state-bucket
 
   serviceType: ClusterIP
 
@@ -65,18 +70,26 @@ controller:
                       secret: "${GITHUB_TOKEN}"
                       description: "GitHub token for Jenkins pipeline access"
 
+                  - string:
+                      scope: GLOBAL
+                      id: "tf-state-bucket"
+                      secret: "${TF_STATE_BUCKET}"
+                      description: "Terraform remote state bucket"
+
       jobs: |
         jobs:
           - script: |
               pipelineJob('feature-vpc-pr') {
                 description('Terraform validation and plan for feature/* branches')
 
+                environmentVariables(FOO: 'bar', TEST: '123')
                 definition {
                   cpsScm {
                     scm {
                       git {
                         remote {
                           url('https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git')
+                          credentials('github-token')
                         }
                         branches('*/feature/*')
                       }
