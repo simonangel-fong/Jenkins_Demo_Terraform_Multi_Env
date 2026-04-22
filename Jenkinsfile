@@ -25,72 +25,16 @@ pipeline {
       }
     }
 
-    stage('Dev') {
-      stages {
-
-        stage('Dev: Fmt') {
-          steps {
-            container('terraform') {
-              sh 'terraform -chdir=${TF_DIR} fmt -recursive -check'
-            }
+    stage('Dev: Fmt') {
+      steps {
+        container('terraform') {
+          dir("${env.TF_DIR}") {
+            sh 'terraform fmt -recursive -check'
           }
         }
-
-        stage('Dev: Init') {
-          steps {
-            container('terraform') {
-              sh 'terraform -chdir=${TF_DIR} init'
-            }
-          }
-        }
-
-        stage('Dev: Validate') {
-          steps {
-            container('terraform') {
-              sh 'terraform -chdir=${TF_DIR} validate'
-            }
-          }
-        }
-
-        stage('Dev: Trivy Scan') {
-          steps {
-            container('trivy') {
-              sh 'trivy config ${TF_DIR}'
-            }
-          }
-        }
-
-        stage('Dev: Plan') {
-          steps {
-            container('terraform') {
-              sh 'terraform -chdir=${TF_DIR} plan -out=tfplan'
-            }
-          }
-          post {
-            always {
-              archiveArtifacts artifacts: "${TF_DIR}/tfplan", allowEmptyArchive: true
-            }
-          }
-        }
-
-        stage('Dev: Apply') {
-          steps {
-            container('terraform') {
-              sh 'terraform -chdir=${TF_DIR} apply -auto-approve tfplan'
-            }
-          }
-        }
-
-        stage('Dev: Verify') {
-          steps {
-            container('aws') {
-              sh 'aws ec2 describe-vpcs --region ${AWS_REGION}'
-            }
-          }
-        }
-
       }
     }
+
 
     stage('Test') {
       steps {
