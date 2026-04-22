@@ -1,0 +1,36 @@
+## Development in Sandbox
+
+```sh
+terraform -chdir=infra init --backend-config=env/sandbox/backend.hcl
+terraform -chdir=infra fmt -recursive && terraform -chdir=infra validate
+terraform -chdir=infra plan -var-file=envs/sandbox/terraform.tfvars
+
+terraform -chdir=infra apply -auto-approve -var-file="env/sandbox/terraform.tfvars"
+
+terraform -chdir=infra destroy -auto-approve -var-file="env/sandbox/terraform.tfvars"
+```
+
+---
+
+## Trivy Scan
+
+```sh
+# Basic local config scan
+trivy config ./infra
+
+# Scan tfvars
+trivy config --tf-vars env/dev/terraform.tfvars .
+
+# Include secret scanning
+trivy fs --scanners secret,misconfig ./
+
+# Focus on important issues only
+trivy config --tf-vars env/dev/terraform.tfvars --severity HIGH,CRITICAL .
+# output report
+trivy config -f json -o trivy-config-report.json .
+
+# scan a Terraform plan
+terraform plan -out=tfplan
+terraform show -json tfplan > tfplan.json
+trivy config tfplan.json
+```
