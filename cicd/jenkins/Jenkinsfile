@@ -88,11 +88,11 @@ pipeline {
       }
     }
 
-    // stage('archive') {
-    //   steps {
-    //     archiveArtifacts artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}", fingerprint: true
-    //   }
-    // }
+    stage('archive') {
+      steps {
+        archiveArtifacts artifacts: "${env.TF_ROOT}/${env.TF_PLAN_FILE}, ${env.TF_ROOT}/${env.TF_PLAN_TXT}", fingerprint: true
+      }
+    }
   }
 
   post {
