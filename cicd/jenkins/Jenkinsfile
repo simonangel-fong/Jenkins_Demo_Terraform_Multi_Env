@@ -176,7 +176,7 @@ pipeline {
 
               VPC_ID=$(aws ec2 describe-vpcs \
                 --region "${AWS_REGION}" \
-                --filters "Name=tag:env,Values=dev" \
+                --filters "Name=tag:Environment,Values=dev" \
                 --query 'Vpcs[0].VpcId' \
                 --output text)
 
