@@ -69,11 +69,10 @@ pipeline {
         dir("${env.TF_ROOT}") {
           withCredentials([
             string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET'),
-            usernamePassword(
-              credentialsId: 'aws-creds',
-              usernameVariable: 'AWS_ACCESS_KEY_ID',
-              passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-            )
+              [
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-creds'
+              ]
           ]) {
             sh '''
               terraform init \
