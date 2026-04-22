@@ -26,19 +26,19 @@ pipeline {
 
     stage('Dev') {
       steps {
-
+        echo 'Dev'
       }
     }
 
     stage('Test') {
       steps {
-        
+        echo 'Test'
       }
     }
 
     stage('Prod') {
       steps {
-        
+        echo 'Prod'
       }
     }
   }
