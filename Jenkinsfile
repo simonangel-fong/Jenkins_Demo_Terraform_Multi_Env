@@ -1,5 +1,7 @@
 @Library('my-shared-library') _
 
+@Library('jenkins-terraform-shared-lib') _
+
 pipeline {
     agent any
 

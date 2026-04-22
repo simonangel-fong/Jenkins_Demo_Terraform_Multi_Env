@@ -65,6 +65,7 @@ controller:
     - junit
     - timestamper
     - email-ext
+    - workflow-cps-global-lib
     
   JCasC:
     defaultConfig: true
@@ -134,6 +135,21 @@ controller:
             smtpPort: "${MAIL_SMTP_PORT}"
             useSsl: true
             useTls: false
+
+      libraries: |
+        unclassified:
+          globalLibraries:
+            libraries:
+              - name: "jenkins-terraform-shared-lib"
+                defaultVersion: "master"
+                implicit: false
+                allowVersionOverride: true
+                retriever:
+                  modernSCM:
+                    scm:
+                      git:
+                        remote: "https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git"
+                        credentialsId: "github-token"
 
       jobs: |
         jobs:
