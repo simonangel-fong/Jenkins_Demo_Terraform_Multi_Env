@@ -25,12 +25,21 @@ pipeline {
     }
 
     stage('Dev') {
+      steps {
+
+      }
     }
 
     stage('Test') {
+      steps {
+        
+      }
     }
 
-      stage('Prod') {
+    stage('Prod') {
+      steps {
+        
+      }
     }
   }
 
