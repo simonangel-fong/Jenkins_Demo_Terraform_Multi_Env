@@ -102,17 +102,21 @@ pipeline {
     stage('plan (dev)') {
       steps {
         dir("${env.TF_ROOT}") {
-          sh '''
-            terraform plan \
-              -input=false \
-              -var="env=${TF_VAR_ENV}"  \
-              -out="${TF_PLAN_FILE}"
+          withCredentials([
+            [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-terraform-creds']
+          ]) {
+            sh '''
+              terraform plan \
+                -input=false \
+                -var="env=${TF_VAR_ENV}"  \
+                -out="${TF_PLAN_FILE}"
 
-            terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
-          '''
+              terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
+            '''
+          }
         }
       }
-    }
+    }  
 
     // stage('archive') {
     //   steps {
