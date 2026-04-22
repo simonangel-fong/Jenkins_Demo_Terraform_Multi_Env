@@ -83,20 +83,46 @@ Deploy Jenkins on Kubernetes via Helm, ready to run pipeline jobs.
 
 ```
 checkout
-→ dev deploy [deploy module] → [test module]
-→ test deploy [deploy module] → [test module]
-→ prod deploy [manual approval] → [deploy module]
-
-
-  (repeat per env: dev → test → prod)
-  prod requires manual approval gate
+→ dev deploy 
+→ test deploy 
+→ prod deploy (requires manual approval gate)
 ```
 
 ---
 
 **Deploy module**
 
-- jenkins\script\deploy.sh
+Stages
+1. Dev stage:
+   - `terraform fmt`(container terraform)
+   - `terraform init`(container terraform)
+   - `terraform validate`(container terraform)
+   - `trivy config`(container trivy)
+   - `terraform plan`(container terraform)
+     - post: archive
+   - `terraform apply`(container terraform)
+   - `aws ec2 describe-vpcs`(container aws)
+2. Test stage:
+   - `terraform fmt`(container terraform)
+   - `terraform init`(container terraform)
+   - `terraform validate`(container terraform)
+   - `trivy config`(container trivy)
+   - `terraform plan`(container terraform)
+     - post: archive
+   - `terraform apply`(container terraform)
+   - `aws ec2 describe-vpcs`(container aws)
+3. Prod stage:
+   - Manual Approval
+   - `terraform fmt`(container terraform)
+   - `terraform init`(container terraform)
+   - `terraform validate`(container terraform)
+   - `trivy config`(container trivy)
+   - `terraform plan`(container terraform)
+     - post: archive
+   - `terraform apply`(container terraform)
+   - `aws ec2 describe-vpcs`(container aws)
+4. Always:
+   - Send notification email
 
 ```txt
 fmt → init → validate → trivy-scan → plan → archive → apply
