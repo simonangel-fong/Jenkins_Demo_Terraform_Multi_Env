@@ -16,35 +16,48 @@ pipeline {
     AWS_REGION    = 'ca-central-1'
 
     TF_ROOT       = 'infra'
-    TF_STATE_KEY  = 'jenkins-terraform/dev/terraform.tfstate'
+    TF_STATE_KEY  = 'jenkins-terraform/test/terraform.tfstate'
     TF_PLAN_FILE  = 'tfplan.binary'
     TF_PLAN_TXT   = 'tfplan.txt'
-    TF_VAR_FILE   = 'envs/dev/terraform.tfvars'
-    TF_VAR_ENV    = 'dev'
+    TF_VAR_FILE   = 'envs/test/terraform.tfvars'
   }
 
-  triggers {
-    pollSCM('H/5 * * * *')
+  parameters {
+    booleanParam(
+      name: 'CONFIRM_TEST_DEPLOY',
+      defaultValue: false,
+      description: 'Check to confirm manual deployment to test'
+    )
   }
 
   stages {
 
-    // stage('Branch Guard') {
-    //   steps {
-    //     script {
-    //       def branchName = env.BRANCH_NAME ?: sh(
-    //         script: 'git rev-parse --abbrev-ref HEAD',
-    //         returnStdout: true
-    //       ).trim()
+    stage('Manual Guard') {
+      steps {
+        script {
+          if (!params.CONFIRM_TEST_DEPLOY) {
+            error("Pipeline aborted: enable CONFIRM_TEST_DEPLOY for manual promotion to test.")
+          }
+        }
+      }
+    }
 
-    //       echo "Detected branch: ${branchName}"
+    stage('Branch Guard') {
+      steps {
+        script {
+          def branchName = env.BRANCH_NAME ?: sh(
+            script: 'git rev-parse --abbrev-ref HEAD',
+            returnStdout: true
+          ).trim()
 
-    //       if (branchName != 'master') {
-    //         error("Pipeline aborted: only master branch is supported. Current branch: ${branchName}")
-    //       }
-    //     }
-    //   }
-    // }
+          echo "Detected branch: ${branchName}"
+
+          if (branchName != 'master') {
+            error("Pipeline aborted: only master branch is supported. Current branch: ${branchName}")
+          }
+        }
+      }
+    }
 
     stage('Checkout') {
       steps {
@@ -101,7 +114,23 @@ pipeline {
       }
     }
 
-    stage('Plan (dev)') {
+    stage('Trivy Scan') {
+      steps {
+        container('trivy') {
+          echo "###############################"
+          echo "Trivy config scan"
+          echo "###############################"
+          sh '''
+            trivy config \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              ${TF_ROOT}/
+          '''
+        }
+      }
+    }
+
+    stage('Plan (test)') {
       steps {
         dir("${env.TF_ROOT}") {
           withCredentials([
@@ -111,12 +140,12 @@ pipeline {
             ]
           ]) {
             echo "###############################"
-            echo "Terraform plan (dev)"
+            echo "Terraform plan (test)"
             echo "###############################"
             sh '''
               terraform plan \
                 -input=false \
-                -var="env=${TF_VAR_ENV}"  \
+                -var-file="${TF_VAR_FILE}" \
                 -out="${TF_PLAN_FILE}"
 
               terraform show -no-color "${TF_PLAN_FILE}" > "${TF_PLAN_TXT}"
@@ -139,7 +168,7 @@ pipeline {
       }
     }
 
-    stage('Apply (dev)') {
+    stage('Apply (test)') {
       steps {
         dir("${env.TF_ROOT}") {
           withCredentials([
@@ -149,7 +178,7 @@ pipeline {
             ]
           ]) {
             echo "###############################"
-            echo "Terraform apply (dev)"
+            echo "Terraform apply (test)"
             echo "###############################"
             sh '''
               terraform apply -input=false "${TF_PLAN_FILE}"
@@ -169,19 +198,19 @@ pipeline {
             ]
           ]) {
             echo "###############################"
-            echo "Confirm dev VPC exists"
+            echo "Confirm test VPC exists"
             echo "###############################"
             sh '''
               set -e
 
               VPC_ID=$(aws ec2 describe-vpcs \
                 --region "${AWS_REGION}" \
-                --filters "Name=tag:Environment,Values=dev" \
+                --filters "Name=tag:Env,Values=test" \
                 --query 'Vpcs[0].VpcId' \
                 --output text)
 
               if [ -z "${VPC_ID}" ] || [ "${VPC_ID}" = "None" ]; then
-                echo "ERROR: No VPC found with tag Env=dev"
+                echo "ERROR: No VPC found with tag Env=test"
                 exit 1
               fi
 
@@ -200,7 +229,7 @@ pipeline {
       echo "###############################"
     }
     success {
-      echo 'Terraform deploy to dev completed successfully, and AWS CLI confirmed the VPC exists.'
+      echo 'Terraform promotion to test completed successfully, and Trivy plus AWS confirmation both passed.'
     }
     failure {
       echo 'Pipeline failed. Check the stage output above.'
