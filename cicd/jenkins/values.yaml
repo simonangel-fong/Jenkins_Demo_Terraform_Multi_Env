@@ -82,7 +82,6 @@ controller:
               pipelineJob('feature-vpc-pr') {
                 description('Terraform validation and plan for feature/* branches')
 
-                environmentVariables(FOO: 'bar', TEST: '123')
                 definition {
                   cpsScm {
                     scm {

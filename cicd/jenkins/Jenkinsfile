@@ -67,7 +67,9 @@ pipeline {
     stage('init') {
       steps {
         dir("${env.TF_ROOT}") {
-          echo "${env.TF_STATE_BUCKET}"
+          withCredentials([string(credentialsId: 'tf-state-bucket', variable: 'TF_STATE_BUCKET')]) {
+            sh 'echo "The secret is $TF_STATE_BUCKET"'
+          }
           // sh '''
           //   terraform init \
           //     -input=false \
