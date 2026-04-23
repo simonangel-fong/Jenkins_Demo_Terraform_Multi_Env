@@ -17,6 +17,10 @@ terraform -chdir=infra destroy -auto-approve -var-file="env/dev/terraform.tfvars
 # test
 terraform -chdir=infra init --backend-config=env/test/backend.hcl -reconfigure
 terraform -chdir=infra destroy -auto-approve -var-file="env/test/terraform.tfvars"
+
+# prod
+terraform -chdir=infra init --backend-config=env/prod/backend.hcl -reconfigure
+terraform -chdir=infra destroy -auto-approve -var-file="env/prod/terraform.tfvars"
 ```
 
 ---
