@@ -38,7 +38,7 @@ Shared Library: TerraformDeploy
 - **Reusable Shared Library**:
   - `terraformDeploy()` abstract pipeline logic into reusable functions
 - **Kubernetes Pod Agents**:
-  - Build runs in ephemeral K8s pods with multiple containers (Terraform, AWS CLI, Trivy)
+  - Build runs in ephemeral K8s pods with multiple containers (Terraform, AWS CLI, Trivy) 
 
 ```txt
                         +---------------------------+
