@@ -147,7 +147,7 @@ controller:
                 retriever:
                   modernSCM:
                     scm:
-                      git:
+                      gitSource:
                         remote: "https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git"
                         credentialsId: "github-token"
 

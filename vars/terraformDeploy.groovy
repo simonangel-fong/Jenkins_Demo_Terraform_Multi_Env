@@ -1,5 +1,6 @@
 def call(String env, String tfDir, String awsRegion, String stateBucketCredId) {
   def stateKey = "jenkins-terraform/${env}/terraform.tfstate"
+  def pluginCacheDir = '/terraform-cache'
 
   stage("${env}: Fmt") {
     container('terraform') {
@@ -17,6 +18,8 @@ def call(String env, String tfDir, String awsRegion, String stateBucketCredId) {
         string(credentialsId: stateBucketCredId, variable: 'TF_STATE_BUCKET')
       ]) {
         sh """
+          mkdir -p ${pluginCacheDir}
+          export TF_PLUGIN_CACHE_DIR=${pluginCacheDir}
           terraform -chdir=${tfDir} init \
             -backend-config="bucket=\${TF_STATE_BUCKET}" \
             -backend-config="key=${stateKey}" \
