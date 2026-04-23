@@ -1,5 +1,5 @@
 def call(String env, String awsRegion) {
-  stage("${env}: Confirm VPC") {
+  stage("${env}: Testing") {
     container('aws') {
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding',

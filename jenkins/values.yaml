@@ -185,8 +185,8 @@ agent:
   waitForPodSec: 120
 
   podTemplates:
-    terraform: |
-      - name: terraform
+    agent: |
+      - name: agent
         label: agent-terraform
         serviceAccount: jenkins
         containers:
