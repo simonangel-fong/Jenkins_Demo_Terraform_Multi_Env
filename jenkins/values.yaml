@@ -65,7 +65,7 @@ controller:
     - junit
     - timestamper
     - email-ext
-    - workflow-cps-global-lib
+    # - workflow-cps-global-lib
     
   JCasC:
     defaultConfig: true
@@ -153,26 +153,6 @@ controller:
 
       jobs: |
         jobs:
-          - script: |
-              pipelineJob('feature-vpc-pr') {
-                description('Terraform validation and plan for feature/* branches')
-
-                definition {
-                  cpsScm {
-                    scm {
-                      git {
-                        remote {
-                          url('https://github.com/simonangel-fong/Jenkins_Demo_Terraform_Multi_Env.git')
-                          credentials('github-token')
-                        }
-                        branches('*/feature/*')
-                      }
-                    }
-                    scriptPath('cicd/jenkins/Jenkinsfile')
-                  }
-                }
-              }
-
           - script: |
               pipelineJob('master-pipeline') {
                 description('Terraform pipeline for master branch')

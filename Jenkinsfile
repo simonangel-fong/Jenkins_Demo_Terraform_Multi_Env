@@ -25,12 +25,14 @@ pipeline {
     stage('Deploy Dev') {
       steps {
         terraformDeploy('dev', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
+        confirmVpc('dev', env.AWS_REGION)
       }
     }
 
     stage('Deploy Test') {
       steps {
         terraformDeploy('test', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
+        confirmVpc('test', env.AWS_REGION)
       }
     }
 
@@ -43,6 +45,7 @@ pipeline {
     stage('Deploy Prod') {
       steps {
         terraformDeploy('prod', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
+        confirmVpc('prod', env.AWS_REGION)
       }
     }
 
