@@ -48,9 +48,7 @@ def call(String env, String tfDir, String awsRegion, String stateBucketCredId) {
          secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         sh """
-          terraform -chdir=${tfDir} plan \
-            -var-file=env/${env}/terraform.tfvars \
-            -out=tfplan
+          terraform -chdir=${tfDir} plan -out=tfplan
           terraform -chdir=${tfDir} show -no-color tfplan > ${tfDir}/tfplan.txt
         """
       }
