@@ -25,11 +25,11 @@
 Pipeline: Terraform Environment Promotion
 Trigger: Master Branch Merge
 
-| Stage | Env    | Flow                                                |
-+-------+--------+-----------------------------------------------------+
-|  1    | Dev    | [Trigger] --> [TerraformDeploy] --> [Dev Test]      |
-|  2    | Test   |               [TerraformDeploy] --> [Test Test]     |
-|  3    | Prod   | [Admin Approval] --> [TerraformDeploy]              |
+| Stage | Env    | Flow                                                   |
++-------+--------+--------------------------------------------------------+
+|  1    | Dev    | [Trigger]     -->    [TerraformDeploy] --> [Dev Test]  |
+|  2    | Test   | [Admin Approval] --> [TerraformDeploy] --> [Test Test] |
+|  3    | Prod   | [Admin Approval] --> [TerraformDeploy]                 |
 
 Shared Library: TerraformDeploy
 | terraform fmt | -> | terraform init | -> | terraform validate | -> | trivy scan | -> | terraform plan  | -> | terraform apply |
