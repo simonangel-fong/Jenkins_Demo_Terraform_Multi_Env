@@ -35,7 +35,9 @@ pipeline {
 
     stage('Approve Test') {
       steps {
-        input message: 'Deploy to test?', ok: 'Approve'
+        timeout(time: 2, unit: 'MINUTES') {
+          input message: 'Deploy to test?', ok: 'Approve'
+        }
       }
     }
 
@@ -48,7 +50,9 @@ pipeline {
 
     stage('Approve Prod') {
       steps {
-        input message: 'Deploy to production?', ok: 'Approve'
+        timeout(time: 5, unit: 'MINUTES') {
+          input message: 'Deploy to production?', ok: 'Approve'
+        }
       }
     }
 
