@@ -18,6 +18,7 @@ pipeline {
     AWS_REGION        = 'ca-central-1'
     TF_DIR            = 'infra'
     STATE_BUCKET_CRED = 'tf-state-bucket'
+    ADMIN_EMAIL       = "${env.MAIL_SMTP_USER}"
   }
 
   stages {
@@ -51,7 +52,7 @@ pipeline {
   post {
     success {
       emailext(
-        to: '$DEFAULT_RECIPIENTS',
+        to: "${env.ADMIN_EMAIL}",
         subject: "[Jenkins] SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """
           <p>Pipeline <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> completed successfully.</p>
@@ -63,7 +64,7 @@ pipeline {
     }
     failure {
       emailext(
-        to: '$DEFAULT_RECIPIENTS',
+        to: "${env.ADMIN_EMAIL}",
         subject: "[Jenkins] FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """
           <p>Pipeline <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> has <b style="color:red">FAILED</b>.</p>
@@ -78,7 +79,7 @@ pipeline {
     }
     aborted {
       emailext(
-        to: '$DEFAULT_RECIPIENTS',
+        to: "${env.ADMIN_EMAIL}",
         subject: "[Jenkins] ABORTED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """
           <p>Pipeline <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> was <b>ABORTED</b>.</p>
