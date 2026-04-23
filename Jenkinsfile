@@ -33,6 +33,12 @@ pipeline {
       }
     }
 
+    stage('Approve Test') {
+      steps {
+        input message: 'Deploy to test?', ok: 'Approve'
+      }
+    }
+
     stage('Deploy Test') {
       steps {
         terraformDeploy('test', env.TF_DIR, env.AWS_REGION, env.STATE_BUCKET_CRED)
