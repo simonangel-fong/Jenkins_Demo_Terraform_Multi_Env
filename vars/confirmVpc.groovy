@@ -1,6 +1,6 @@
 def call(String env, String awsRegion) {
   stage("${env}: Confirm VPC") {
-    container('terraform') {
+    container('aws') {
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding',
          credentialsId: 'aws-creds',
