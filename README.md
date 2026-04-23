@@ -1,6 +1,12 @@
 # Jenkins Demo: Terraform Multi-Environment Pipeline
 
-A production-style CI/CD pipeline that provisions AWS VPC infrastructure across multiple environments using Terraform, Jenkins on Kubernetes, and automated security scanning.
+> A production-style CI/CD pipeline that provisions AWS infrastructure across multiple environments using Terraform, Jenkins on Kubernetes, and automated security scanning.
+
+- [Jenkins Demo: Terraform Multi-Environment Pipeline](#jenkins-demo-terraform-multi-environment-pipeline)
+  - [DevOps CI/CD Pipeline Design](#devops-cicd-pipeline-design)
+  - [Jenkins Best Practices on Kubernetes](#jenkins-best-practices-on-kubernetes)
+  - [Security \& Secrets Management](#security--secrets-management)
+  - [Pipeline in Action](#pipeline-in-action)
 
 ---
 
@@ -12,6 +18,8 @@ A production-style CI/CD pipeline that provisions AWS VPC infrastructure across 
   - Manual approval step blocks Prod deploy until explicitly confirmed
 - **Infrastructure as Code**:
   - Terraform with reusable custom VPC module, variable validation, plan/apply separation
+
+- **Pipeline Architecture:**
 
 ```txt
 Pipeline: Terraform Environment Promotion
@@ -36,9 +44,11 @@ Shared Library: TerraformDeploy
 - **Configuration as Code (JCasC)**:
   - Credentials, plugins, and system config declared in `values.yaml` — fully reproducible
 - **Reusable Shared Library**:
-  - `terraformDeploy()` abstract pipeline logic into reusable functions
+  - `terraformDeploy()` abstracts pipeline logic into reusable functions
 - **Kubernetes Pod Agents**:
-  - Build runs in ephemeral K8s pods with multiple containers (Terraform, AWS CLI, Trivy) 
+  - Build runs in ephemeral K8s pods with multiple containers (Terraform, AWS CLI, Trivy)
+
+- **Jenkins Configurations diagram**
 
 ```txt
                         +---------------------------+
@@ -94,3 +104,21 @@ Zero Hardcoded Secrets
                                                     |  (no secrets)      |
                                                     +--------------------+
 ```
+
+---
+
+## Pipeline in Action
+
+- Pipeline
+
+![pic](./docs/assets/pipeline_dashboard01.png)
+
+![pic](./docs/assets/pipeline_dashboard02.png)
+
+- Production Approval
+
+![pic](./docs/assets/pipeline_approval.png)
+
+- Notification
+
+![pic](./docs/assets/pipeline_email.png)
