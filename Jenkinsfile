@@ -14,6 +14,10 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '20'))
   }
 
+  triggers {
+    pollSCM('H/2 * * * *')
+  }
+
   environment {
     AWS_REGION        = 'ca-central-1'
     TF_DIR            = 'infra'
