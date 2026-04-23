@@ -35,7 +35,7 @@ pipeline {
 
     stage('Approve Test') {
       steps {
-        timeout(time: 2, unit: 'MINUTES') {
+        timeout(time: 30, unit: 'MINUTES') {
           input message: 'Deploy to test?', ok: 'Approve'
         }
       }
