@@ -75,7 +75,7 @@ Shared Library: TerraformDeploy
       |terraformDeploy()| |Pod Agent             | |Pipeline (Github repo)|
       |                 | |(Terraform,AWS,Trivy) | |                      |
       +-----------------+ +----------------------+ +----------------------+
-```
+``` 
 
 ---
 
